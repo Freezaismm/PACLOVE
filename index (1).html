@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pac-Love For Nadine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-pink: #ff0077;
+            --neon-blue: #00f3ff;
+            --bg-dark: #0a0a0a;
+            --gamepad-color: #333; /* Kamu bisa ganti jadi #ff85a1 kalau mau warna pink */
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Press Start 2P', cursive;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        /* --- LAYOUT GAMEPAD --- */
+        .gamepad-case {
+            background: var(--gamepad-color);
+            padding: 20px;
+            border-radius: 30px 30px 60px 60px;
+            border: 6px solid #222;
+            box-shadow: 10px 10px 0px #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .screen-area {
+            background: #111;
+            padding: 10px;
+            border-radius: 10px;
+            border: 5px solid #444;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        canvas { background-color: #000; display: block; border: 2px solid #222; }
+
+        .brand {
+            font-size: 8px;
+            color: #777;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+
+        /* --- CONTROLS --- */
+        .controls-area {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0 10px;
+            margin-top: 10px;
+        }
+
+        .d-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 45px);
+            grid-template-rows: repeat(3, 45px);
+        }
+
+        .ctrl-btn {
+            width: 45px; height: 45px;
+            background: #222; border: 2px solid #000;
+            color: white; font-size: 18px;
+            border-radius: 5px; cursor: pointer;
+        }
+        .ctrl-btn:active { background: var(--neon-pink); }
+        .up { grid-column: 2; grid-row: 1; }
+        .left { grid-column: 1; grid-row: 2; }
+        .right { grid-column: 3; grid-row: 2; }
+        .down { grid-column: 2; grid-row: 3; }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            transform: rotate(-15deg);
+        }
+        .btn-a, .btn-b {
+            width: 50px; height: 50px;
+            background: #a00; border-radius: 50%;
+            border: 4px solid #500;
+            display: flex; justify-content: center;
+            align-items: center; font-size: 12px;
+            box-shadow: 2px 2px 0px #000;
+        }
+
+        /* --- OVERLAYS --- */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 200; text-align: center; padding: 20px;
+        }
+
+        .photo-frame {
+            width: 120px; height: 120px;
+            border: 4px solid var(--neon-blue);
+            border-radius: 15px; overflow: hidden;
+            margin-bottom: 20px; box-shadow: 0 0 15px var(--neon-blue);
+            animation: pulse 2s infinite;
+        }
+        #start-photo { width: 100%; height: 100%; object-fit: cover; }
+
+        h1 { color: var(--neon-pink); text-shadow: 3px 3px var(--neon-blue); font-size: 20px; margin: 10px 0; }
+        .long-text {
+            font-family: 'VT323', monospace; font-size: 20px;
+            line-height: 1.4; color: #fff; max-width: 90%;
+            white-space: pre-wrap; display: none; text-align: left;
+            overflow-y: auto; max-height: 60vh;
+        }
+
+        .stats { font-size: 10px; margin-bottom: 10px; color: var(--neon-blue); }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 5px var(--neon-blue); }
+            50% { box-shadow: 0 0 20px var(--neon-blue); }
+            100% { box-shadow: 0 0 5px var(--neon-blue); }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="sfx-eat" src="https://files.catbox.moe/kn3otg.mp3"></audio>
+    <audio id="bgm" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
+    <audio id="sfx-win" src="https://files.catbox.moe/8fl04m.mp3"></audio>
+
+    <div id="start-screen" class="overlay">
+        <div class="photo-frame">
+            <img src="https://img.sanishtech.com/u/90fce36526ab978718386f82c2bfa5e4.png" alt="Nadine" id="start-photo">
+        </div>
+        <h1>PAC-LOVE</h1>
+        <p style="font-size: 10px; margin-bottom: 40px;">Escape from ezaaa yaaww...<br>hwhehehe</p>
+        <button class="btn-start" onclick="startGame()" style="padding:15px; background:none; border:2px solid var(--neon-blue); color:white; font-family:'Press Start 2P';">MULAI GAME</button>
+    </div>
+
+    <div id="transition-screen" class="overlay" style="display:none;">
+        <h2 style="color: var(--neon-blue);">STAGE CLEAR!</h2>
+        <p style="font-size: 12px;">Lanjut ke stage berikutnyaa yaaa..</p>
+    </div>
+
+    <div id="finish-screen" class="overlay" style="display:none;">
+        <h1 id="finish-title">WIHH SO COOL!</h1>
+        <div id="typing-text" class="long-text"></div>
+        <button class="btn-start" id="restart-btn" style="margin-top:20px; display:none; border:1px solid white; color:white; padding:10px; background:none;" onclick="location.reload()">MAIN LAGI ❤️</button>
+    </div>
+
+    <div class="gamepad-case">
+        <div class="screen-area">
+            <div class="stats" id="ui-stats" style="visibility: hidden;">
+                STG: <span id="stage-val">1</span> | ❤️: <span id="score-val">0</span>
+            </div>
+            <div id="game-container">
+                <canvas id="gameCanvas"></canvas>
+            </div>
+        </div>
+
+        <div class="brand">NADINE <small>EZA</small></div>
+
+        <div class="controls-area" id="ui-controls" style="visibility: hidden;">
+            <div class="d-pad">
+                <button class="ctrl-btn up" onclick="move('up')">↑</button>
+                <button class="ctrl-btn left" onclick="move('left')">←</button>
+                <button class="ctrl-btn right" onclick="move('right')">→</button>
+                <button class="ctrl-btn down" onclick="move('down')">↓</button>
+            </div>
+            <div class="action-buttons">
+                <div class="btn-b">B</div>
+                <div class="btn-a">A</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const SIZE = 24;
+let score = 0;
+let currentStage = 0;
+let gameActive = false;
+
+const sfxEat = document.getElementById('sfx-eat');
+const bgm = document.getElementById('bgm');
+
+const stages = [
+    [
+        [1,1,1,1,1,1,1,1,1,1,1],
+        [1,0,0,0,1,0,0,0,0,0,1],
+        [1,0,1,0,0,0,1,1,1,0,1],
+        [1,0,0,0,1,0,0,0,1,0,1],
+        [1,1,1,0,1,1,1,0,0,0,1],
+        [1,0,0,0,0,0,0,0,1,0,1],
+        [1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    [
+        [1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,0,0,1,0,0,0,0,1,0,0,0,1],
+        [1,0,1,1,0,1,1,0,1,1,0,1,1],
+        [1,0,0,0,0,0,1,0,0,0,0,0,1],
+        [1,1,1,0,1,0,1,0,1,0,1,1,1],
+        [1,0,0,0,1,0,0,0,1,0,0,0,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ]
+];
+
+let map = [];
+let player = { x: 1, y: 1 };
+let ghosts = [];
+
+function startGame() {
+    sfxEat.volume = 0.5; 
+    bgm.volume = 0.3; 
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('ui-stats').style.visibility = 'visible';
+    document.getElementById('ui-controls').style.visibility = 'visible';
+    bgm.play();
+    loadStage(0);
+    gameActive = true;
+    gameLoop();
+}
+
+function loadStage(n) {
+    map = JSON.parse(JSON.stringify(stages[n]));
+    canvas.width = map[0].length * SIZE;
+    canvas.height = map.length * SIZE;
+    player = { x: 1, y: 1 };
+    ghosts = [{ x: map[0].length-2, y: map.length-2 }];
+    document.getElementById('stage-val').innerText = n + 1;
+}
+
+function draw() {
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0,0,canvas.width, canvas.height);
+    for(let y=0; y<map.length; y++) {
+        for(let x=0; x<map[y].length; x++) {
+            if(map[y][x] === 1) {
+                ctx.fillStyle = "#0044ff";
+                ctx.fillRect(x*SIZE+2, y*SIZE+2, SIZE-4, SIZE-4);
+                ctx.strokeStyle = "#00f3ff";
+                ctx.strokeRect(x*SIZE+2, y*SIZE+2, SIZE-4, SIZE-4);
+            } else if(map[y][x] === 0) {
+                ctx.fillStyle = "#ff0077";
+                ctx.beginPath();
+                ctx.arc(x*SIZE+SIZE/2, y*SIZE+SIZE/2, 3, 0, Math.PI*2);
+                ctx.fill();
+            }
+        }
+    }
+    ctx.font = "18px Arial";
+    ctx.fillText("👩🏻", player.x*SIZE+2, player.y*SIZE+18);
+    ghosts.forEach(g => {
+        ctx.fillText("🧒🏽", g.x*SIZE+2, g.y*SIZE+18);
+    });
+}
+
+function move(dir) {
+    if(!gameActive) return;
+    let nx = player.x, ny = player.y;
+    if(dir === 'up') ny--;
+    if(dir === 'down') ny++;
+    if(dir === 'left') nx--;
+    if(dir === 'right') nx++;
+
+    if(map[ny][nx] !== 1) {
+        player.x = nx; player.y = ny;
+        if(map[ny][nx] === 0) {
+            map[ny][nx] = 2;
+            score += 10;
+            document.getElementById('score-val').innerText = score;
+            sfxEat.currentTime = 0;
+            sfxEat.play();
+            checkStageClear();
+        }
+    }
+}
+
+function moveGhosts() {
+    if(!gameActive) return;
+    ghosts.forEach(g => {
+        const dirs = [{x:1,y:0}, {x:-1,y:0}, {x:0,y:1}, {x:0,y:-1}];
+        let validMoves = dirs.filter(d => map[g.y + d.y][g.x + d.x] !== 1);
+        if(validMoves.length > 0) {
+            let d = validMoves[Math.floor(Math.random() * validMoves.length)];
+            g.x += d.x; g.y += d.y;
+        }
+        if(g.x === player.x && g.y === player.y) {
+            alert("heeyyy kena tangkap fathann dongg, its okeyy cobaa lagi yakk ❤️");
+            player = { x: 1, y: 1 };
+        }
+    });
+}
+
+function checkStageClear() {
+    if(!map.flat().includes(0)) {
+        gameActive = false;
+        if(currentStage < stages.length - 1) {
+            document.getElementById('transition-screen').style.display = 'flex';
+            setTimeout(() => {
+                currentStage++;
+                loadStage(currentStage);
+                document.getElementById('transition-screen').style.display = 'none';
+                gameActive = true;
+                gameLoop();
+            }, 2000); 
+        } else {
+            showFinish();
+        }
+    }
+}
+
+function showFinish() {
+    gameActive = false;
+    bgm.pause();
+    const sfxWin = document.getElementById('sfx-win');
+    if(sfxWin) sfxWin.play();
+
+    document.getElementById('finish-screen').style.display = 'flex';
+    const txtEl = document.getElementById('typing-text');
+    txtEl.style.display = 'block';
+    txtEl.innerHTML = "";
+
+    const pesanNadine = `ALLOOWW SAYANGGGG!!!!\n\nWihh kerenn nihh pagi pagii uda namatin game baru lagii wkwkwkwk, game ini tu namanyaa pac lovee, terinspirasi dari pacmann, tapi aku buat versii kitaa wkwkwkwkkw, gimanaa kerenn gaa gamenyaaa?? semogaa kamu sukaa yaakk, semogaa nambah mutmu di pagi hari jugaa yaakkk aamiin.\n\nMakasihh yaakk sudaa menjadii orangg yang sangatt sayangg fathannn, timakasii harii ini sudaa banyak nemeninnyaaa yaakkk wkwkwkwk, dari pagii ke kelass, teruss di kelass jugaa masih nyempetin baless chat akk, teruss tadii masih mikirin ak soal kelompokann, dan kita bisa holding hand sedikitt hehehe, laluu kitaa pulang ke parkirann bersamaa samaaaa dann masihh banyak momenn lagiii.. aku bersyukurr bangett dehh kamu sudaa mulai terbuka lagi untuk mainn samaa akk, ak sangat merasa di sayangg, karenaa dulu ak sangat kesepiann dan always sedii, huhuu. tapi sekarangg adaa kamuuu, jadii tidaa pernah sedihh lagii deee, sayangg kamu bangett pokoknyaa maahh..\n\n yasudaa dee segitu dulu ajaa yak buat hari iniii timakasiii banyak banyakk dehh pokoknyaa mah buat harii iniii.. semogaa besok pagii kitaa bisaa bersamaa lagii yaa sayanggg.. aamiin yaallah, okeeyydeee sslamaat beristirahaatt yaa sayangggg, boboo yang nyenyakk yaaa.. semogaa kamu ga kebangunn yaakk buat hari iniii, bisa bobo sampe pagii deee wkkwkwkwwk.. okeeydeee goodnight my honey bunny sweetieeee.. paipaii paipaiii.. je t'aimeee bieennn yaaaaaa🤍🤍🤍🤍🤍🩷🩷🩷🩷🩷🩷🩷🫶🏻🫶🏻🫶🏻🫶🏻🫶🏻🫶🏻🫶🏻🫶🏻🫶🏻🩷🩷🤍🤍🤍🤍🤍 -`;
+
+    let charIndex = 0;
+    function typeWriter() {
+        if (charIndex < pesanNadine.length) {
+            txtEl.innerHTML += pesanNadine.charAt(charIndex);
+            charIndex++;
+            setTimeout(typeWriter, 40);
+        } else {
+            document.getElementById('restart-btn').style.display = 'block';
+        }
+    }
+    setTimeout(typeWriter, 1000);
+}
+
+function gameLoop() {
+    if(gameActive) {
+        draw();
+        setTimeout(() => {
+            moveGhosts();
+            gameLoop();
+        }, 300);
+    }
+}
+
+window.addEventListener('keydown', e => {
+    if(e.key === 'ArrowUp') move('up');
+    if(e.key === 'ArrowDown') move('down');
+    if(e.key === 'ArrowLeft') move('left');
+    if(e.key === 'ArrowRight') move('right');
+});
+</script>
+</body>
+</html>
